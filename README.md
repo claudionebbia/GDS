@@ -14,7 +14,7 @@ python -m SimpleHTTPServer 80
 
 o usando Node.js con el paquete [http-server](https://www.npmjs.com/package/http-server) 
 
-```
+```bash
 npm install --global http-server
 http-server [path] -p 80
 ```
