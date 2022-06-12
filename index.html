@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Data Science</title>
+</head>
+<body>
+    <article class="guide">
+        <carousel class="deck container-fluid">
+            <slide id="s0">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Antes de comenzar...</h3>
+                </div>
+                <div class="col-sm-9">
+                    <p>En este tutorial revisaremos los principales algoritmos del plugin <b>Graph Data Science</b>.</p>
+                    <p>Antes de comenzar te recomiendo haber cubierto los contenidos básicos:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">:GUIDE intro  //Paseo por la interfaz de Neo4j Browser</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">:GUIDE concepts //Conceptos básicos de los grafos de propiedades</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">:PLAY cypher //Introducción a Cypher</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">:PLAY movie-graph //Base de datos de películas</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">:PLAY northwind-graph //Importar datos y migrar de relacional a grafos</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                </div>
+            </slide>
+            <slide id="s1">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h2 style="color:orange;">Grafos vs Tablas</h2>
+                </div>
+                <div class="col-sm-9">
+                    <p><img src="http://localhost//img/data_table.png" style="float: right; margin: 0 0 10px 15px" width="350px">
+                        En el estudio de las <b>Ciencias de datos</b> y el <b>Aprendizaje automático (machine learning)</b>  
+                        es común ver que la información se estructura de manera relacional, es decir en tablas utilizando 
+                        columnas y renglones. Cada fila de la tabla (o cada nodo de datos) se puede considerar como una entidad 
+                        independiente de las demás. Esta aproximación es muy cómoda para generar listas de información como en 
+                        la tabla de la derecha. <br><br> Si queremos resaltar las relaciones entre los renglones o nodos las 
+                        tablas no son tan útiles. Para esta tarea la estructura del grafo se adapta mucho mejor, como puedes 
+                        ver en la imagen de la izquierda.</p>
+                    <p><img src="http://localhost//img/graph-01.png" style="float: left; margin: 10px 15px 10px 0" width="350px">
+                        <b style="color:orange">Los grafos</b> son estructuras muy útiles para modelar información que se relaciona entre sí. 
+                        Por ejemplo, sirven muy bien para modelar amistades entre usuarios de redes sociales, o para relacionar la lista de usuarios de Netflix o Spotify 
+                        con las películas o música que les gustan. La estructura de un grafo es tan simple que se puede aplicar casi donde 
+                        sea, desde relacionar las transacciones bancarias con los usuarios que las realizan y los negocios que las solicitan, 
+                        hasta para relacionar los conceptos de un diccionario con los conceptos del mismo que son necesarios para definir al 
+                        primero.</p>
+                    </div>
+            </slide>
+            <slide id="s2">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h2 style="color:orange;">Pensar en grafos</h2>
+                </div>
+                <div class="col-sm-9">
+                    <p>Disponer de la información en un grafo nos permite pensar en los patrones estructurales que la conforman. Cuál de todos los vértices está más 
+                        conectado, o cuál pertenece a la mayor cantidad de caminos, se vuelven preguntas naturales. Analizando la conexidad de la gráfica 
+                        podemos preguntarnos también si hay comunidades de nodos altamente conectados, o si hay puntos de corte que puedan partir a nuestro 
+                        grafo en varias partes.</p>
+                    <p>En esta guía analizaremos varios algoritmos del plugin Graph Data Science (GDS) que nos servirán para resolver varias preguntas 
+                        sobre la estructura interna del grafo que nos interese. Los algoritmos del GDS están expuestos mediante procedimientos de CYPHER y 
+                        se clasifican en:
+                        <img src="http://localhost//img/graph02.png" style="float: right; width: 150px; margin: 20px 20px 0px;"></p>
+                    <ol>
+                        <li>+ Medidas de centralidad</li>
+                        <li>+ Detección de comunidades</li>
+                        <li>+ Similaridad de nodos</li>
+                        <li>+ Búsqueda de caminos</li> 
+                        <li>+ Predicción de nuevos links</li>
+                        <li>+ Node-Embeddings para Machine Learning</li>
+                    </ol>
+                </div>
+            </slide>
+            <slide id="s3">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Datos de prueba</h3>
+                    <h5 style="color:coral;">Aeropuertos y rutas</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p><img style="float: right; margin-left: 10px" width="450px" src="http://localhost//img/esquema.png">
+                        La base de datos que cargaremos contiene todos los aeropuertos, ordenados por ciudad, país, región y continente. 
+                        Los <i>labels</i> usados son:</p> 
+                    <p style="font-family: 'Courier New', Courier, monospace;">:Airport, :City, :Region, :Country y :Continent</p> 
+                    <p>y están vinculadas mediante las relaciones:</p>
+                    <p style="font-family: 'Courier New', Courier, monospace;">
+                        :HAS_ROUTE, :IN_CITY, :IN_REGION, :IN_COUNTRY y :ON_CONTINENT</p> 
+                    <p>Este dataset fue creado por Kelvin Lawrence, y puede consultarse bajo la licencia Apache License Version 2.0.<br>
+                        El dataset original puede encontrarse en este <a href="https://github.com/krlawrence/graph">repositorio de GitHub</a> 
+                        y ha sido modificado para los propósitos de esta guía. </p>
+                    <p>Ahora procederemos a cargarlo.</p>            
+                </div>
+            </slide>
+            <slide id="s4">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Datos de prueba</h3>
+                    <h5 style="color:coral;">Aeropuertos y rutas</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Primero definamos el esquema de nuestro grafo colocando las restricciones adecuadas:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CREATE CONSTRAINT airports IF NOT EXISTS ON (a:Airport) ASSERT a.iata IS UNIQUE;
+CREATE CONSTRAINT cities IF NOT EXISTS ON (c:City) ASSERT c.name IS UNIQUE;
+CREATE CONSTRAINT regions IF NOT EXISTS ON (r:Region) ASSERT r.name IS UNIQUE;
+CREATE CONSTRAINT countries IF NOT EXISTS ON (c:Country) ASSERT c.code IS UNIQUE;
+CREATE CONSTRAINT continents IF NOT EXISTS ON (c:Continent) ASSERT c.code IS UNIQUE;
+CREATE INDEX locations IF NOT EXISTS FOR (air:Airport) ON (air.location);</pre>
+                        <figcaption>Esquema del grafo</figcaption>
+                    </figure><br>
+                    <p>Con esto nos aseguramos que no haya nodos repetidos por cada uno de los <i>lables</i>, ahora procederemos a crear los nodos
+                    del grafo, es decir, los aeropuertos, las ciudades, las regiones, los países y los continentes junto con las relaciones de pertenencia
+                    entre ellos:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">WITH 'https://raw.githubusercontent.com/neo4j-graph-examples/graph-data-science2/main/data/airport-node-list.csv' AS url
+LOAD CSV WITH HEADERS FROM url AS row
+MERGE (a:Airport {iata: row.iata})
+MERGE (ci:City {name: row.city})
+MERGE (r:Region {name: row.region})
+MERGE (co:Country {code: row.country})
+MERGE (con:Continent {name: row.continent})
+MERGE (a)-[:IN_CITY]->(ci)
+MERGE (a)-[:IN_COUNTRY]->(co)
+MERGE (ci)-[:IN_COUNTRY]->(co)
+MERGE (r)-[:IN_COUNTRY]->(co)
+MERGE (a)-[:IN_REGION]->(r)
+MERGE (ci)-[:IN_REGION]->(r)
+MERGE (a)-[:ON_CONTINENT]->(con)
+MERGE (ci)-[:ON_CONTINENT]->(con)
+MERGE (co)-[:ON_CONTINENT]->(con)
+MERGE (r)-[:ON_CONTINENT]->(con)
+SET a.id = row.id,
+    a.icao = row.icao,
+    a.city = row.city,
+    a.descr = row.descr,
+    a.runways = toInteger(row.runways),
+    a.longest = toInteger(row.longest),
+    a.altitude = toInteger(row.altitude),
+    a.location = point({latitude: toFloat(row.lat), longitude: toFloat(row.lon)});</pre>
+                        <figcaption>Carga de nodos y links de pertenencia</figcaption>
+                    </figure><br>
+                    <p>Por último, cargamos las relaciones que existen entre los aeropuertos, es decir las rutas que hay de unos a otros:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">LOAD CSV WITH HEADERS FROM 'https://raw.githubusercontent.com/neo4j-graph-examples/graph-data-science2/main/data/iroutes-edges.csv' AS row
+MATCH (source:Airport {iata: row.src})
+MATCH (target:Airport {iata: row.dest})
+MERGE (source)-[r:HAS_ROUTE]->(target)
+ON CREATE SET r.distance = toInteger(row.dist);</pre>
+                        <figcaption>Carga de rutas entre aeropuertos</figcaption>
+                    </figure>
+                </div>
+            </slide>
+            <slide id="s5">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Datos de prueba</h3>
+                    <h5 style="color:coral;">Aeropuertos y rutas</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Ahora que tenemos la base de datos cargada exploremos su esquema:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL db.schema.visualization()</pre>
+                        <figcaption></figcaption>
+                    </figure><br>
+                    <p>Observa cómo se relacionan los 5 tipos de nodos, con sus vínculos de pertenencia y 
+                        los vínculos de ruta únicamente entre los aeropuertos.</p>
+                </div>
+            </slide>
+            <slide id="s6">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Exploración de datos</h3>
+                    <h5 style="color:coral;">Propiedades de nodos y links</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Podemos explorar por encima nuestro grafo antes de comenzar con el plugin GDS.<br>
+                        Por ejemplo veamos qué datos identifican a un aeropuerto:
+                    </p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">MATCH (a:Airport) RETURN a LIMIT 1</pre>
+                        <figcaption></figcaption>
+                    </figure><br>
+                    <p><b>Ejercicio 1</b>: Explora los demás tipos de vértices y sus propiedades.</p>
+                    <p><b>Ejercicio 2</b>: Explora también los diferentes tipos de links y sus propiedades.</p>
+                </div>
+            </slide>
+            <slide id="s7">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Exploración de datos</h3>
+                    <h5 style="color:coral;">Estadística básica</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Ahora revisemos algunos datos estadísticos. Comencemos con la distribución de los aeropuertos por continente:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">MATCH (c:Continent)
+return c.name AS continent_name, SIZE((:Airport)-[:ON_CONTINENT]->(c)) AS num_airports
+ORDER BY num_airports DESC</pre>
+                        <figcaption></figcaption>
+                    </figure><br>
+                    <p><b>Ejercicio 3</b>: Observa la distribución de aeropuertos por ciudad y por país.</p>
+                    <p><b>Ejercicio 4</b>: Observa la distribución de rutas por aeropuerto, por ciudad y por país.<br>
+                        ¿Cuál es el aeropuerto con más rutas de salida y cual con más rutas de llegada?<br>
+                        ¿Cuál es la ciudad con más rutas de salida y cual con más rutas de llegada?</p>
+                    <p><b>Ejercicio 5</b>: Calcula la proporción de rutas de vuelos nacionales contra 
+                        vuelos internacionales por país.<br>¿Qué países están en los extremos de esta razón?</p>
+                </div>
+            </slide>
+            <slide id="s8">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Exploración de datos</h3>
+                    <h5 style="color:coral;">Estadística básica</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Podemos calcular el número máximo, mínimo y promedio de rutas que tiene cada 
+                        aeropuerto junto con la desviación estándar.</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">MATCH (a:Airport)-[:HAS_ROUTE]->()
+WITH a, count(*) AS num
+RETURN min(num) AS min, max(num) AS max, avg(num) AS promedio, stdev(num) AS desviacion_estandard</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p><b>Ejercicio 6</b>: Calcula los estadísticos anteriores pero por ciudad y por país.</p>
+                    <p><b>Ejercicio 7</b>: Con el ejercicio anterior identifica los extremos globales 
+                        (ciudades y países con máximo número de rutas) y los extremos acotados por continente.</p>                    
+                </div>
+            </slide>
+            <slide id="s9">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Proyecciones</h3>
+                    <h5 style="color:coral;">Definiciones</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Antes de comenzar a usar GDS debes saber como funciona. Para que estos algoritmos sean veloces, se crean 
+                        "copias" simplificadas de la base de datos directamente en la memoria RAM. A estas "copias" simplificadas les 
+                        llamamos <strong>proyecciones</strong> y su limitante es la cantidad de RAM con la que contamos. Por esta razón 
+                        es importante estar al pendiente de la cantidad de memoria que usará la proyección más lo que van a requerir los 
+                        algoritmos de análisis que queramos ejecutar.</p>
+                    <p>Puedes encontrar la documentación completa del GDS <a href="https://neo4j.com/docs/graph-data-science/current/?ref=gds-sandbox" target="_blank">aquí</a>.</p>
+                    <p>Con el siguiente comando crearemos una proyección de la base de datos con únicamente los aeropuertos y las rutas 
+                        entre ellos. No contemplaremos ningún otro tipo de nodo ni de relación en esta proyección.</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.graph.project('rutas_de_vuelo', ['Airport'], ['HAS_ROUTE'])
+YIELD graphName, nodeProjection, nodeCount, relationshipProjection, relationshipCount</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p>El método gds.graph.proyect() recibe tres parámetros. Primero el nómobre de la proyección, en este caso 'rutas_de_vuelo', 
+                        segundo un vector con los labels de los nodos a considerar, ['Airport'] , y por último otro vector con los labels de los 
+                        links ['HAS_ROUTE']. Puede recibir un cuarto parámetro de tipo Map con propiedades para configurar la proyección que 
+                        veremos más adelante. Al crear la proyección este método nos devuelve algunos datos estadísticos como el número de 
+                        nodos y de links.</p>
+                    <pre style="font-family:'Courier New', Courier, monospace">
+// Definición de la función: 
+CALL gds.graph.project(
+    graphName: String,
+    nodeProjection: String or List or Map,
+    relationshipProjection: String or List or Map,
+    configuration: Map
+)
+YIELD
+    graphName: String,
+    nodeProjection: Map,
+    nodeCount: Integer,
+    relationshipProjection: Map,
+    relationshipCount: Integer,
+    projectMillis: Integer,
+    createMillis: Integer</pre>
+                </div>
+            </slide>
+            <slide id="s10">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Proyecciones</h3>
+                    <h5 style="color:coral;">Catálogo</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Una vez que hemos hecho la proyección, ésta se enlista en <b>el catálogo de proyecciones</b>. 
+                        Para ver todas las proyecciones usamos el comando:
+                    </p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.graph.list()</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p>Existen varias razones por las que las proyecciones pueden ser borradas. Como ocupan RAM es 
+                        posible que algún administrador las borre para disponer de los recursos, también se borran 
+                        si la base de datos se reinicia. Por esto, si queremos ver si nuestra proyeccion sigue 
+                        disponible usamos la misma función mandando como parámetro el nombre del grafo que buscamos:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.graph.list('rutas_de_vuelo')</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                </div>
+            </slide>
+            <slide id="s11">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Proyecciones</h3>
+                    <h5 style="color:coral;">GDS vs CYPHER</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Antes de profundizar en los algoritmos del GDS hagamos un ejemplo calculando un índice
+                        básico de centralidad por nodo, el in-grado. Este tipo de centralidad la puedes calcular
+                        directamente, por lo que es ideal para compararla con la mecánica del GDS. Primero
+                        realicemos la consulta como sabemos en CYPHER:
+                    </p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">MATCH (a:Airport)
+WITH a, SIZE((a)-[:HAS_ROUTE]->(:Airport)) AS in_grado
+RETURN a.city AS city, a.iata AS airport_code, in_grado
+ORDER BY in_grado DESC</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p>Ahora realicemos el mismo estudio con GDS:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.degree.stream('rutas_de_vuelo') 
+YIELD nodeId, score 
+RETURN gds.util.asNode(nodeId).iata AS iata, gds.util.asNode(nodeId).descr AS description, score
+ORDER BY score DESC, iata ASC</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p>Lo primero que hay que observar es que los nodos de la proyección, a diferencia de los nodos
+                        de la base de datos, no tiene casi elementos justo para ahorrar memoria RAM y agilizar los 
+                        cálculos.</p>
+                    <p>Cada nodo de la proyeccion tiene un nodeId interno que es propio de la proyección y que 
+                        no tiene que ver con el id interno de la base de datos. Mediante el método <b>gds.util.asNode()</b>
+                        podemos recuperar el nodo de la base de datos para solicitar sus propiedades, tales como el 
+                        código del áeropuerto, el IATA o la descripción.</p>
+                </div>
+            </slide>
+            <slide id="s12">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Algoritmos</h3>
+                    <h5 style="color:coral;">Modos de entrega de datos</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Existen 4 modos de ejecución para cada algoritmo del plugin:</p>
+                    <ul>
+                        <li><b>stream</b>: Regresa el resultado del algoritmo sin alterar la base de datos.</li>
+                        <li><b>write</b>: Escribe el resultado del algoritmo en la base de datos y nos regresa un resumen de la operación.</li>
+                        <li><b>mutate</b>: Escribe el resultado como propiedad de los nodos de la proyección sin alterar la base de datos, y nos regresa un resumen de la operación.</li>
+                        <li><b>stats</b>:  Unicamente nos regresa un resumen estadístico de lo que sucedería si se ejecuta la instrucción.</li>
+                    </ul>
+                    La sintaxis básica es:
+                    <pre>CALL gds.[&lt;madurez&gt;.]&lt;algoritmo&gt;.&lt;mode&gt;[.&lt;estimate&gt;](
+    nombreDeLaProyeccion: String,
+    configuracion: Map (opcional salvo al usar &lt;estimate&gt;)
+)</pre>
+                    <p>Donde &lt;algoritmo&gt; es el nombre del algoritno a utilizar, &lt;mode&gt; es uno 
+                        de los 4 modos descritos arriba y &lt;estimate&gt; se debe declarar para los algoritmos
+                        que tenga una madurez <b>production</b>(no es necesario declarar), <b>beta</b> o <b>alpha</b>. 
+                        La función &lt;estimate&gt; nos permite estimar la cantidad de memoria RAM que se usará al ejecutar el comando.</p>
+                    <p>Al momento de realizar esta guía, al utilizar el método &lt;estimate&gt; no existen parámetros opcionales, 
+                        por lo que deben incluirse aunque sea con mapas vacios {} :</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.degree.stream.estimate('rutas_de_vuelo', {})
+YIELD nodeCount, relationshipCount, bytesMin, bytesMax, requiredMemory</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p>Escribamos la propiedad <i>in_degree</i> dentro de cada aeropuerto de la base de datos, primero analizando la memoria necesaria antes de ejecutar el procedimiento:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.degree.write.estimate('rutas_de_vuelo', { writeProperty: 'in_degree' })
+YIELD nodeCount, relationshipCount, bytesMin, bytesMax, requiredMemory</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p>Si el consumo de memoria indicado por <i>requiredMemory</i> es aceptable, entonces podemos ejecutar el análisis:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.degree.write('rutas_de_vuelo', { writeProperty: 'in_degree' })
+YIELD centralityDistribution, nodePropertiesWritten
+RETURN centralityDistribution.min AS minimumScore, centralityDistribution.mean AS meanScore, nodePropertiesWritten</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                </div>
+            </slide>
+            <slide id="s13">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Algoritmos</h3>
+                    <h5 style="color:coral;">Medidas de Centralidad</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Puedes consultar la documentación completa <a href="https://neo4j.com/docs/graph-data-science/current/algorithms/centrality/" target="_blank">aquí</a>.</p>
+                    <p>Las medidas de centralidad se usan para determinar la importancia de cada uno de los nodos del grafo. 
+                        GDS incluye los siguientes algoritmos de centralidad agrupados por calidad:</p>
+                    <H3>Producción</H3>
+                    <ul>
+                        <li><b>Degree</b>: Sirve para encontrar nodos populares dentro de un gráfico midiendo el número de relaciones 
+                            entrantes o salientes (o ambas) de un nodo. Puede usar "pesos" en las relaciones para calcular la suma de éstas.</li>
+                        <li><b>Page Rank</b>: (Mediante iteraciones) calcula la importancia de cada nodo en función de la importancia de los nodos vecinos. 
+                            En términos generales, una página es tan importante como la suma de la importancia de las páginas que la vinculan.</li>
+                        <li><b>Article Rank</b>: Modificando Page Rank, Article Rank reduce la influencia de los vecinos poco importantes. En palabras coloquiales,
+                            si un nodo tiene muchos vecinos poco importantes, pero ninguno importante, entonces uno sigue siendo poco importante.</li>
+                        <li><b>Eigenvector</b>: El algoritmo del PageRank se calcula con la matriz de adyacencias. Este algoritmo calcula 
+                            el eiguenvector más grande y lo usa para medir las centralidades. Aquí los nodos poco importantes aportan casi nada, 
+                            mientras que los nodos importantes aporten todo el valor. </li>
+                        <li><b>Betweenness</b>: Sirve para detectar la cantidad de influencia que tiene un nodo sobre el flujo de información en un grafo. 
+                            A menudo se usa para encontrar nodos que sirven como puente de una parte de un grafo a otra. Es un algoritmo pesado ya que calcula
+                            los caminos más cortos entre todos los pares de nodos posibles.</li>
+                    </ul>
+                    <H3>Beta</H3>
+                    <ul>
+                        <li><b>Closeness</b>: Sirve para detectar nodos que pueden distribuir información de manera muy eficiente a través de un gráfo. 
+                            Dado un nodo se mide el inverso de la distancia promedio a todos los demás nodos. Los nodos con puntuación alta tienen las 
+                            distancias más cortas a todos los demás nodos. Es un algoritmo pesado ya que calcula los caminos más cortos entre todos los pares 
+                            de nodos posibles.</li>
+                    </ul>
+                    <H3>Alpha</H3>
+                    <ul>
+                        <li><b>Harmonic</b>: Se propuso como una alternativa a "Closeness" en grafos que pueden ser disconexos. Se puede usar  
+                            para encontrar en qué parte de la ciudad debemos colocar una tienda para que sea fácilmente accesible para los residentes, o 
+                            si queremos difundir un mensaje en redes sociales nos sirve para encontrar influencers clave.</li>
+                        <li><b>HITS</b>: (Hyperlink Induced Topic Search) es un algoritmo de análisis de links que clasifica los nodos en función de un puntaje 
+                            central y un puntaje de autoridad. La de autoridad estima la importancia del nodo dentro de la red. La puntuación central estima sus 
+                            relaciones con otros nodos. <a href="http://www.cs.cornell.edu/home/kleinber/auth.pdf" target="_blank">Ver artículo</a>.</li>
+                        <li><b>Influence maximization</b>: Si el grafo tiene n nodos y debo seleccionar un grupo con k nodos (k es un número determinado de inicio) 
+                            que maximicen su influencia sobre el grafo total, esta es la aproximación que se debe usar. k se coloca en el parámetro <i>seedSetSize</i> 
+                            del algoritmo. Tiene dos variantes, Greedy que es más precisa (para grafos pequeños) y CELF que es más veloz (para grafos grandes). 
+                        </li>
+                    </ul>
+                </div>
+            </slide>
+            <slide id="s14">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Algoritmos</h3>
+                    <h5 style="color:coral;">Centralidad</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Si nos interesa conocer qué aeropuertos son los principales 
+                       del mundo en función del número de rutas con otros aeropuertos importantes podemos usar el algoritmo del Page Rank.
+                       Para no estár calculando constantemente el ranking de cada aeropuerto podemos colocarlo como propiedad:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">CALL gds.pageRank.write('routes',{writeProperty: 'pagerank'})
+YIELD nodePropertiesWritten, ranIterations</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p>Una vez hecho esto podemos realizar consultas como la siguiente:</p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">MATCH (a:Airport)
+RETURN a.iata AS iata, a.descr AS descripcion, a.pagerank AS pagerank
+ORDER BY a.pagerank DESC, a.iata ASC</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <h4>Ejercicios:</h4>
+                    <p>Igual que para el Page Rank crea 3 preguntas sobre la base de datos actual de aeropuertos
+                       donde tenga sentido usar <b>Influence Maximization</b>, <b>Betweeness</b> y <b>Closeness</b>.</p>
+                </div>
+            </slide>
+            <slide id="s15">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Algoritmos</h3>
+                    <h5 style="color:coral;">Detección de comunidades (Clustering)</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p>Existen también muchas maneras de identificar comunidades en un grafo. Estos algoritmos se usan para evaluar
+                        como grupos de nodos forman clusters, es decir pedazos del grafo que tienen tendencia
+                        a mantenerse unidos o a separarse (romperse). GDS contiene los siguentes algoritmos organizados
+                        por nivel de madurez:</p>
+                    <h3>Producción</h3>
+                    <ul>
+                        <li><b>Louvain</b>: Util para grafos grandes, selecciona vértices, y los une de forma iterativa con los vértices cercanos con 
+                            los que hay más probabilidad de formar un cluster, tomando en cuenta que la cantidad de links del cluster
+                            hacia afuera del mismo debe ser menor que la cantidad de links internos.</li>
+                        <li><b>Label Propagation</b>: La intuición detrás del algoritmo es, al etiquetar los nodos y difundir las
+                            etiquetas a los nodos vecinos se observa que una sola etiqueta puede convertirse rápidamente en 
+                            dominante en un grupo de nodos densamente conectados, pero tendrá problemas para cruzar una región 
+                            escasamente conectada. Este es uno de los algoritmos más veloces para detectar comunidades.</li>
+                        <li><b>Weakly connected components</b>: </li>
+                        <li><b>Triangle count</b>: </li>
+                        <li><b>Local Clustering coefficient</b>: </li>
+                    </ul>
+                    <h3>Beta</h3>
+                    <ul>
+                        <li><b>K-1 Coloring</b>: </li>
+                        <li><b>Modularity Optimization</b>: </li>
+                    </ul>
+                    <!--h3>Alpha</h3>
+                    <ul>
+                        <li><b>Strongly connected components</b>: </li>
+                        <li><b>Speaker-Listener Label Propagation</b>: </li>
+                        <li><b>Approximate Maximum K-cut</b>: </li>
+                        <li><b>Conductance metric</b>: </li>
+                        <li><b>K-Means Clustering</b>: </li>
+                        <li><b>Leiden</b>: </li>
+                    </ul-->
+                    
+                </div>
+            </slide>
+            <!--
+            <slide id="s##">
+                <div class="col-sm-3">
+                    <h4 style="color:cornflowerblue;">Graph Data Sciences</h4>
+                    <h3 style="color:orange;">Proyecciones</h3>
+                    <h5 style="color:coral;">GDS vs CYPHER</h5>
+                </div>
+                <div class="col-sm-9">
+                    <p></p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable">MATCH ...</pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p></p>
+                    <figure>
+                        <pre class="pre-scrollable code runnable"></pre>
+                        <figcaption></figcaption>
+                    </figure>
+                    <p></p>
+                </div>
+            </slide>
+            -->
+        </carousel>
+    </article>
+</body>
+</html>
